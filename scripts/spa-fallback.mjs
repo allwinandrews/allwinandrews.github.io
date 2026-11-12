@@ -4,7 +4,7 @@
 import { copyFileSync, mkdirSync, readFileSync } from 'node:fs'
 
 const slugs = [...readFileSync('src/data/projects.ts', 'utf8').matchAll(/slug: '([^']+)'/g)].map((m) => m[1])
-const routes = ['services', ...slugs.map((s) => `projects/${s}`)]
+const routes = ['work', 'services', ...slugs.map((s) => `projects/${s}`)]
 for (const r of routes) {
   mkdirSync(`dist/${r}`, { recursive: true })
   copyFileSync('dist/index.html', `dist/${r}/index.html`)

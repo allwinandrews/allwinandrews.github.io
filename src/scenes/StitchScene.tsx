@@ -3,7 +3,7 @@ import { useMemo, useRef, type RefObject } from 'react'
 import * as THREE from 'three'
 import { prefersReducedMotion, useJson } from '../lib/hooks'
 
-type StitchData = {
+export type StitchData = {
   colors: string[]
   count: number
   w: number
@@ -16,7 +16,7 @@ type StitchData = {
 const DURATION = 14 // seconds to sew the whole design
 const HEIGHT = 4.4 // world units
 
-function build(data: StitchData) {
+export function build(data: StitchData) {
   const n = data.count
   const s = HEIGHT / data.h
   const pos = new Float32Array(n * 3)

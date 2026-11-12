@@ -27,7 +27,7 @@ export default function ProjectPage() {
       <Nav />
       <main className="page">
         <p className="crumb">
-          <Link to="/#work">Work</Link> / {p.title}
+          <Link to="/work#work">Work</Link> / {p.title}
         </p>
         <h1>{p.title}</h1>
         <p className="lead big">{p.tagline}</p>

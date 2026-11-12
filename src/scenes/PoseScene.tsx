@@ -3,7 +3,7 @@ import { useMemo, useRef, type RefObject } from 'react'
 import * as THREE from 'three'
 import { useJson } from '../lib/hooks'
 
-type PoseData = { fps: number; connections: [number, number][]; frames: (number[] | null)[] }
+export type PoseData = { fps: number; connections: [number, number][]; frames: (number[] | null)[] }
 
 const SCALE = 2.3
 const v = (f: number[], i: number) => new THREE.Vector3(f[i * 3], f[i * 3 + 1], f[i * 3 + 2])
@@ -15,14 +15,16 @@ function angle(f: number[], a: number, b: number, c: number) {
   return THREE.MathUtils.radToDeg(ba.angleTo(bc))
 }
 
-function Skeleton({
+export function Skeleton({
   data,
   video,
   hud,
+  grid = true,
 }: {
   data: PoseData
   video: RefObject<HTMLVideoElement | null>
   hud: RefObject<HTMLDivElement | null>
+  grid?: boolean
 }) {
   const group = useRef<THREE.Group>(null)
   const { bones, joints, frame } = useMemo(() => {
@@ -73,12 +75,12 @@ function Skeleton({
   return (
     <group ref={group} position={[0, 0.15, 0]}>
       <lineSegments geometry={bones}>
-        <lineBasicMaterial color="#f7b157" />
+        <lineBasicMaterial color="#f7b157" fog={false} />
       </lineSegments>
       <points geometry={joints}>
         <pointsMaterial color="#fff4e0" size={0.09} sizeAttenuation />
       </points>
-      <gridHelper args={[6, 12, '#3a332c', '#231f1b']} position={[0, -0.85 * SCALE, 0]} />
+      {grid && <gridHelper args={[6, 12, '#3a332c', '#231f1b']} position={[0, -0.85 * SCALE, 0]} />}
     </group>
   )
 }

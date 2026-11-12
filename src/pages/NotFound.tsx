@@ -8,7 +8,7 @@ export default function NotFound() {
       <main className="page narrow">
         <h1>Page not found</h1>
         <p>
-          <Link to="/">Back to the home page</Link>
+          <Link to="/work">Back to the work page</Link>
         </p>
       </main>
       <Footer />

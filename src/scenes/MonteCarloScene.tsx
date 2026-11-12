@@ -18,7 +18,7 @@ const DEPTH = 3.2
 const YSCALE = 5.5
 const REVEAL = 7 // seconds
 
-function Fan({ data }: { data: MonteCarloData }) {
+export function Fan({ data }: { data: MonteCarloData }) {
   const group = useRef<THREE.Group>(null)
   const p = useRef(0)
   const { geo, pairs, axis } = useMemo(() => {
@@ -67,7 +67,7 @@ function Fan({ data }: { data: MonteCarloData }) {
   return (
     <group ref={group} rotation={[0.12, 0, 0]}>
       <lineSegments geometry={geo}>
-        <lineBasicMaterial vertexColors transparent opacity={0.55} />
+        <lineBasicMaterial vertexColors transparent opacity={0.55} fog={false} />
       </lineSegments>
       <lineSegments geometry={axis}>
         <lineBasicMaterial color="#f3ede4" transparent opacity={0.5} />

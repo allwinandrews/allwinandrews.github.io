@@ -21,9 +21,10 @@ export function Nav({ right }: { right?: ReactNode }) {
         Allwin James Andrews
       </Link>
       <nav className="nav-links">
-        <Link to="/#work">Work</Link>
-        <Link to="/#experience">Experience</Link>
-        <Link to="/#contact">Contact</Link>
+        <Link to="/">Explore</Link>
+        <Link to="/work#work">Work</Link>
+        <Link to="/work#experience">Experience</Link>
+        <Link to="/work#contact">Contact</Link>
         {right}
       </nav>
     </header>

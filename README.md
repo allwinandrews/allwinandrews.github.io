@@ -15,9 +15,14 @@ npm run build
 
 ## Layout
 
-- `/` is the employer-facing site. The `3D / Plain` toggle (or `?view=plain`) switches to a fast table view.
+- `/` is the walkable world (`src/pages/World.tsx`, `src/world/`). Visitors walk a stitched path and open each
+  project as a landmark. Landmark positions and collectibles are in `src/world/stations.ts`.
+- `/work` is the scroll version of the same content. The world falls back to it when WebGL is missing or the
+  3D context is lost, and links to it as "Plain site". `?view=plain` there switches to a table.
 - `/projects/<slug>` is one page per project, so each can be linked directly.
 - `/services` is the AJA IT Services freelance page. It is not in the main navigation on purpose.
+
+Controls: WASD or arrow keys, click or tap the ground, or drag to steer. E, Enter or tapping the prompt opens a landmark.
 
 ## Content
 

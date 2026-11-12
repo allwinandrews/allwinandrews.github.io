@@ -94,7 +94,7 @@ export default function Services() {
           <h2>Recent work</h2>
           <p>
             Case studies, including a retail AI agent, a real-time meeting assistant and a lead form platform with over
-            2,000 customers, are on <Link to="/#work">my portfolio</Link>.
+            2,000 customers, are on <Link to="/work#work">my portfolio</Link>.
           </p>
         </section>
 
