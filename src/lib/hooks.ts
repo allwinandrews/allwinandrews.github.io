@@ -56,3 +56,8 @@ export function hasWebGL() {
 }
 
 export const asset = (p: string) => import.meta.env.BASE_URL + p
+
+/** True when a key press is aimed at something that has its own keyboard behaviour. */
+export function isInteractive(target: EventTarget | null) {
+  return target instanceof Element && !!target.closest('a, button, input, select, textarea, [contenteditable], [role="dialog"]')
+}

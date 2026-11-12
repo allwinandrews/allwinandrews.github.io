@@ -1,6 +1,7 @@
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
+import { isInteractive } from '../lib/hooks'
 import { game } from './game'
 import { Prop } from './props'
 import { bounds, pathCurve, reachOf, sizes, spools, stations, type Station } from './stations'
@@ -327,6 +328,7 @@ function Controller({
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
+      if (isInteractive(e.target)) return // keep Enter, Space and arrows working on links, buttons and panel scrolling
       const k = e.key.toLowerCase()
       if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(k)) e.preventDefault()
       keys.current.add(k)

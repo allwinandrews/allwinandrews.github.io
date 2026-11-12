@@ -3,7 +3,7 @@ import { Component, useCallback, useEffect, useRef, useState, useSyncExternalSto
 import { Link, Navigate } from 'react-router-dom'
 import { Boundary } from '../components/Boundary'
 import { bySlug, experience, profile } from '../data/projects'
-import { hasWebGL } from '../lib/hooks'
+import { hasWebGL, isInteractive } from '../lib/hooks'
 import { game, kadhaDesign, loadSave, writeSave } from '../world/game'
 import { DesignPicker } from '../components/Exhibits'
 import Scene from '../world/Scene'
@@ -159,6 +159,7 @@ export default function World() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && openId) setOpenId(null)
+      else if (isInteractive(e.target)) return // Enter or Space on a link or button does what it says
       else if (!started && e.key === 'Enter') setStarted(true)
       else if (started && !openId && near && (e.key === 'e' || e.key === 'E' || e.key === 'Enter' || e.key === ' ')) {
         e.preventDefault()
@@ -259,7 +260,15 @@ export default function World() {
       )}
 
       {started && !openStation && nearStation && (
-        <button className="world-prompt" onClick={() => open(nearStation.id)}>
+        <button
+          className="world-prompt"
+          // open on press, not release: walking can move you out of range (and remove this button) mid-click
+          onPointerDown={(e) => {
+            e.preventDefault()
+            open(nearStation.id)
+          }}
+          onClick={(e) => e.detail === 0 && open(nearStation.id)}
+        >
           {!touch && <kbd>E</kbd>}
           <span>
             {found.has(nearStation.id) ? 'Look again at' : 'Take a look at'} {nearStation.hint}

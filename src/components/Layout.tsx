@@ -1,16 +1,28 @@
 import { useEffect, type ReactNode } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigationType } from 'react-router-dom'
 import { profile } from '../data/projects'
 
+/**
+ * Scroll like a normal multi-page site: a new page starts at the top, a #hash goes to its
+ * section, and Back keeps the browser's own position. Page CSS uses smooth scrolling, which
+ * made a new page visibly slide up from the old scroll offset (it looked like it had not loaded),
+ * so these jumps are always instant.
+ */
 export function ScrollToTop() {
   const { pathname, hash } = useLocation()
+  const type = useNavigationType()
   useEffect(() => {
-    if (hash) {
-      const el = document.getElementById(hash.slice(1))
-      if (el) return el.scrollIntoView()
+    if (type === 'POP' && !hash) return
+    const go = () => {
+      const el = hash ? document.getElementById(decodeURIComponent(hash.slice(1))) : null
+      if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' })
+      else if (!hash) window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
     }
-    window.scrollTo(0, 0)
-  }, [pathname, hash])
+    go()
+    // images and lazy sections can shift the layout just after the route renders
+    const id = requestAnimationFrame(go)
+    return () => cancelAnimationFrame(id)
+  }, [pathname, hash, type])
   return null
 }
 
