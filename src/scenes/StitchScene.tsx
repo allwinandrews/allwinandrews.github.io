@@ -29,7 +29,7 @@ function build(data: StitchData) {
   for (let i = 0; i < n; i++) {
     pos[i * 3] = data.pts[i * 2] * s
     pos[i * 3 + 1] = -data.pts[i * 2 + 1] * s
-    pos[i * 3 + 2] = thread[i] * 0.02 // later threads sit on top, like the real patch
+    pos[i * 3 + 2] = thread[i] * 0.07 // later threads sit on top, like the real patch
     const c = palette[thread[i]]
     col[i * 3] = c.r
     col[i * 3 + 1] = c.g
@@ -89,8 +89,8 @@ function Stitches({
     }
     if (group.current) {
       const t = clock.elapsedTime
-      const ty = pointer.x * 0.35 + Math.sin(t * 0.4) * 0.08
-      const tx = -pointer.y * 0.2 + Math.cos(t * 0.3) * 0.04
+      const ty = pointer.x * 0.6 + Math.sin(t * 0.4) * 0.3
+      const tx = -pointer.y * 0.3 + Math.cos(t * 0.3) * 0.08
       group.current.rotation.y += (ty - group.current.rotation.y) * 0.06
       group.current.rotation.x += (tx - group.current.rotation.x) * 0.06
     }

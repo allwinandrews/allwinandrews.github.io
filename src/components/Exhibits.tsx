@@ -31,7 +31,7 @@ export function StitchExhibit() {
     <figure className="exhibit exhibit-stitch">
       <Stage
         className="stage-stitch"
-        fallback={<img src={asset('media/kadha-wolf.jpg')} alt="Kadha wolf patch design" />}
+        fallback={<img src={asset('media/kadha-adam.jpg')} alt="Kadha Creation of Adam patch design" />}
       >
         {(active) => <StitchScene active={active} hud={hud} runId={runId} />}
       </Stage>
