@@ -171,7 +171,7 @@ export default function Home() {
             <div className="hero-art">
               <StitchExhibit />
               <p className="fine">
-                A real embroidery file, sewn in machine order. My{' '}
+                A finished Kadha embroidery design, front view. My{' '}
                 <Link to="/projects/kadha">Python pipeline</Link> generated every stitch from a piece of artwork.
               </p>
             </div>

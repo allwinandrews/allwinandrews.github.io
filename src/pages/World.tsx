@@ -27,7 +27,7 @@ function KadhaPicker() {
   const design = useSyncExternalStore(kadhaDesign.subscribe, kadhaDesign.get)
   return (
     <>
-      <p className="meta">Pick a design and watch the hoop sew it, stitch by stitch</p>
+      <p className="meta">Pick a design to see it in the hoop</p>
       <DesignPicker value={design} onChange={kadhaDesign.set} />
     </>
   )

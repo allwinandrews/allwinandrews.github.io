@@ -17,19 +17,14 @@ const distTo = (s: Station) => Math.hypot(game.pos.x - s.x, game.pos.z - s.z)
 /** Kadha: a giant embroidery hoop that sews the real stitch file as you walk up. */
 function Hoop({ station }: { station: Station }) {
   const design = useSyncExternalStore(kadhaDesign.subscribe, kadhaDesign.get)
-  const data = useJson<StitchData>(`data/stitches/${design}.json`)
-  const built = useMemo(() => (data ? build(data) : null), [data])
-  const p = useRef(0)
-  useEffect(() => {
-    p.current = 0 // a newly chosen design is sewn from the start
-  }, [built])
-  useFrame((_, dt) => {
-    if (!built) return
-    if (distTo(station) < 19 || p.current > 0) p.current = Math.min(built.pairs, p.current + (Math.min(dt, 0.1) * built.pairs) / 18)
-    built.geo.setDrawRange(0, Math.floor(p.current) * 2)
-  })
+  const tex = useMemo(() => {
+    const t = new THREE.TextureLoader().load(asset(`media/kadha/${design}.jpg`))
+    t.colorSpace = THREE.SRGBColorSpace
+    return t
+  }, [design])
+  useEffect(() => () => tex.dispose(), [tex])
   return (
-    <group position={[0, 3.05, 0]} rotation={[0, 0.35, 0]} scale={0.72}>
+    <group position={[0, 3.05, 0]} scale={0.72}>
       <mesh scale={[1, 1.43, 1]}>
         <torusGeometry args={[2.35, 0.13, 10, 64]} />
         <meshStandardMaterial color="#b98a55" roughness={0.6} />
@@ -38,16 +33,10 @@ function Hoop({ station }: { station: Station }) {
         <circleGeometry args={[2.3, 64]} />
         <meshStandardMaterial color="#1c1814" roughness={1} side={THREE.DoubleSide} />
       </mesh>
-      {built && (
-        <group position={[0, 0, 0.02]}>
-          <lineSegments geometry={built.ghost}>
-            <lineBasicMaterial vertexColors transparent opacity={0.12} depthWrite={false} fog={false} />
-          </lineSegments>
-          <lineSegments geometry={built.geo}>
-            <lineBasicMaterial vertexColors fog={false} />
-          </lineSegments>
-        </group>
-      )}
+      <mesh scale={[1, 1.43, 1]} position={[0, 0, 0.02]}>
+        <circleGeometry args={[2.3, 64]} />
+        <meshBasicMaterial map={tex} toneMapped={false} fog={false} />
+      </mesh>
       {[-1.5, 1.5].map((x) => (
         <mesh key={x} position={[x, -3.6, -0.1]}>
           <cylinderGeometry args={[0.09, 0.12, 1.4, 8]} />
