@@ -988,3 +988,45 @@ button.btn {
 button.btn-primary {
   color: #1b1408;
 }
+
+/* kadha design picker */
+.kadha-gallery .design-name {
+  text-align: center;
+  font-weight: 600;
+  margin: 8px 0 14px;
+}
+.picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 96px), 1fr));
+  gap: 10px;
+}
+.pick {
+  display: block;
+  padding: 0;
+  text-align: left;
+  color: var(--muted);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  font: 400 0.72rem var(--mono);
+}
+.pick img {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+}
+.pick span {
+  display: block;
+  padding: 6px 7px;
+  line-height: 1.25;
+}
+.pick:hover,
+.pick[aria-pressed='true'] {
+  border-color: var(--code);
+  color: var(--text);
+}
+.pick[aria-pressed='true'] {
+  box-shadow: 0 0 0 1px var(--code);
+}

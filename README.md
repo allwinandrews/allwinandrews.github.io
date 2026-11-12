@@ -33,7 +33,7 @@ the profile notes kept outside this repo.
 
 | Scene | Data | Regenerate with |
 |---|---|---|
-| Hero embroidery | `public/data/stitches.json`, a Kadha PES file | `python scripts/export_stitches.py <file.pes> public/data/stitches.json` |
+| Kadha designs (hero, hoop, picker) | `public/data/stitches/<id>.json`, one per design in `src/data/designs.ts` | `python scripts/export_stitches.py <file.pes> public/data/stitches/<id>.json`, plus an image at `public/media/kadha/<id>.jpg` |
 | fitness-ai skeleton | `public/data/pose.json`, MediaPipe over the demo clip | `python scripts/export_pose.py <video.mp4> public/data/pose.json` |
 | Monte Carlo fan | `public/data/montecarlo.json`, from the trading-bot backtester | run `scripts/export_montecarlo.py` from the trading-bot folder with its venv |
 

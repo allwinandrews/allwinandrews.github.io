@@ -1,10 +1,11 @@
 import { Canvas } from '@react-three/fiber'
-import { Component, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { Component, useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { Boundary } from '../components/Boundary'
 import { bySlug, experience, profile } from '../data/projects'
 import { hasWebGL } from '../lib/hooks'
-import { game, loadSave, writeSave } from '../world/game'
+import { game, kadhaDesign, loadSave, writeSave } from '../world/game'
+import { DesignPicker } from '../components/Exhibits'
 import Scene from '../world/Scene'
 import { spools, stations, type Station } from '../world/stations'
 
@@ -20,6 +21,16 @@ class Safe extends Component<{ children: ReactNode; onFail: () => void }, { fail
   render() {
     return this.state.failed ? null : this.props.children
   }
+}
+
+function KadhaPicker() {
+  const design = useSyncExternalStore(kadhaDesign.subscribe, kadhaDesign.get)
+  return (
+    <>
+      <p className="meta">Pick a design and watch the hoop sew it, stitch by stitch</p>
+      <DesignPicker value={design} onChange={kadhaDesign.set} />
+    </>
+  )
 }
 
 function PanelBody({ s }: { s: Station }) {
@@ -73,6 +84,7 @@ function PanelBody({ s }: { s: Station }) {
           <li key={pt}>{pt}</li>
         ))}
       </ul>
+      {p.slug === 'kadha' && <KadhaPicker />}
       <p className="status">{p.status}</p>
       <Link className="btn btn-primary" to={`/projects/${p.slug}`}>
         Read the full case study

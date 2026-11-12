@@ -9,6 +9,7 @@ export function useJson<T>(path: string): T | null {
     const url = import.meta.env.BASE_URL + path
     if (!cache.has(url)) cache.set(url, fetch(url).then((r) => r.json()))
     let alive = true
+    setData(null)
     cache.get(url)!.then((d) => alive && setData(d as T))
     return () => {
       alive = false

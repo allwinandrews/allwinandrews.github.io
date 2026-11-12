@@ -116,12 +116,14 @@ export default function StitchScene({
   active,
   hud,
   runId,
+  design = 'adam',
 }: {
   active: boolean
   hud: RefObject<HTMLDivElement | null>
   runId: number
+  design?: string
 }) {
-  const data = useJson<StitchData>('data/stitches.json')
+  const data = useJson<StitchData>(`data/stitches/${design}.json`)
   return (
     <Canvas
       dpr={[1, 1.75]}
@@ -129,7 +131,7 @@ export default function StitchScene({
       camera={{ position: [0, 0, 7.4], fov: 38 }}
       gl={{ antialias: true, alpha: true }}
     >
-      {data && <Stitches data={data} hud={hud} runId={runId} />}
+      {data && <Stitches key={design} data={data} hud={hud} runId={runId} />}
     </Canvas>
   )
 }

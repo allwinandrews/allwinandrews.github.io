@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Boundary, Legend } from '../components/Boundary'
-import { MonteCarloExhibit, PoseExhibit, StitchExhibit } from '../components/Exhibits'
+import { KadhaGallery, MonteCarloExhibit, PoseExhibit } from '../components/Exhibits'
 import { Footer, Nav } from '../components/Layout'
 import { bySlug, projects } from '../data/projects'
 import { asset } from '../lib/hooks'
@@ -49,7 +49,7 @@ export default function ProjectPage() {
 
         {p.exhibit === 'stitch' && (
           <div className="page-exhibit page-exhibit-stitch">
-            <StitchExhibit />
+            <KadhaGallery />
           </div>
         )}
         {p.exhibit === 'pose' && (

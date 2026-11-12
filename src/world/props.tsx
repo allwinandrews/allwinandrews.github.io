@@ -1,11 +1,11 @@
 import { useFrame } from '@react-three/fiber'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
 import * as THREE from 'three'
 import { asset, useJson } from '../lib/hooks'
 import { Fan, type MonteCarloData } from '../scenes/MonteCarloScene'
 import { Skeleton, type PoseData } from '../scenes/PoseScene'
 import { build, type StitchData } from '../scenes/StitchScene'
-import { game } from './game'
+import { game, kadhaDesign } from './game'
 import type { PropKind, Station } from './stations'
 
 const GOLD = '#f7b157'
@@ -16,12 +16,16 @@ const distTo = (s: Station) => Math.hypot(game.pos.x - s.x, game.pos.z - s.z)
 
 /** Kadha: a giant embroidery hoop that sews the real stitch file as you walk up. */
 function Hoop({ station }: { station: Station }) {
-  const data = useJson<StitchData>('data/stitches.json')
+  const design = useSyncExternalStore(kadhaDesign.subscribe, kadhaDesign.get)
+  const data = useJson<StitchData>(`data/stitches/${design}.json`)
   const built = useMemo(() => (data ? build(data) : null), [data])
   const p = useRef(0)
+  useEffect(() => {
+    p.current = 0 // a newly chosen design is sewn from the start
+  }, [built])
   useFrame((_, dt) => {
     if (!built) return
-    if (distTo(station) < 19) p.current = Math.min(built.pairs, p.current + (Math.min(dt, 0.1) * built.pairs) / 18)
+    if (distTo(station) < 19 || p.current > 0) p.current = Math.min(built.pairs, p.current + (Math.min(dt, 0.1) * built.pairs) / 18)
     built.geo.setDrawRange(0, Math.floor(p.current) * 2)
   })
   return (

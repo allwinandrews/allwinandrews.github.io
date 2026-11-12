@@ -34,3 +34,20 @@ export function writeSave(found: Set<string>, spools: Set<number>, started: bool
     /* private mode */
   }
 }
+
+/** The design the Kadha hoop is sewing. A tiny store so the DOM panel and the 3D hoop stay in step. */
+const listeners = new Set<() => void>()
+let design = 'adam'
+export const kadhaDesign = {
+  get: () => design,
+  set(id: string) {
+    design = id
+    listeners.forEach((l) => l())
+  },
+  subscribe(l: () => void) {
+    listeners.add(l)
+    return () => {
+      listeners.delete(l)
+    }
+  },
+}

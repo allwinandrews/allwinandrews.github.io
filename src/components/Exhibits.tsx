@@ -1,5 +1,6 @@
 import { lazy, Suspense, useRef, useState, type ReactNode } from 'react'
 import { asset, hasWebGL, useInView, useJson } from '../lib/hooks'
+import { designById, designs } from '../data/designs'
 import type { MonteCarloData } from '../scenes/MonteCarloScene'
 
 const StitchScene = lazy(() => import('../scenes/StitchScene'))
@@ -24,16 +25,16 @@ function Stage({
   )
 }
 
-export function StitchExhibit() {
+export function StitchExhibit({ design = 'adam' }: { design?: string }) {
   const hud = useRef<HTMLDivElement>(null)
   const [runId, setRunId] = useState(0)
   return (
     <figure className="exhibit exhibit-stitch">
       <Stage
         className="stage-stitch"
-        fallback={<img src={asset('media/kadha-adam.jpg')} alt="Kadha Creation of Adam patch design" />}
+        fallback={<img src={asset(`media/kadha/${design}.jpg`)} alt="Kadha embroidery design" />}
       >
-        {(active) => <StitchScene active={active} hud={hud} runId={runId} />}
+        {(active) => <StitchScene active={active} hud={hud} runId={runId} design={design} />}
       </Stage>
       <figcaption>
         <div className="hud" ref={hud}>
@@ -112,5 +113,33 @@ export function MonteCarloExhibit() {
         </p>
       </figcaption>
     </figure>
+  )
+}
+
+/** Pick any Kadha design and watch it sewn from its real stitch file. */
+export function DesignPicker({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+  return (
+    <div className="picker" role="group" aria-label="Choose a design">
+      {designs.map((d) => (
+        <button key={d.id} className="pick" aria-pressed={d.id === value} onClick={() => onChange(d.id)} title={d.name}>
+          <img src={asset(`media/kadha/${d.id}.jpg`)} alt="" loading="lazy" />
+          <span>{d.name}</span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+export function KadhaGallery() {
+  const [id, setId] = useState('adam')
+  const d = designById(id)
+  return (
+    <div className="kadha-gallery">
+      <StitchExhibit design={id} />
+      <p className="design-name">
+        {d.name} <span className="meta">{d.theme}</span>
+      </p>
+      <DesignPicker value={id} onChange={setId} />
+    </div>
   )
 }

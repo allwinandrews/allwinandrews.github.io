@@ -218,10 +218,13 @@ export default function Home() {
                   </Link>
                 </div>
                 <div className="gallery">
-                  {kadha.images!.map((im) => (
-                    <img key={im.src} src={asset(im.src)} alt={im.alt} loading="lazy" />
+                  {['adam', 'kali', 'jatayu', 'chaathan', 'yakshi', 'shiva'].map((id) => (
+                    <img key={id} src={asset(`media/kadha/${id}.jpg`)} alt="Kadha embroidery design" loading="lazy" />
                   ))}
                 </div>
+                <Link className="more" to="/projects/kadha">
+                  See all 13 designs
+                </Link>
               </section>
             </section>
 

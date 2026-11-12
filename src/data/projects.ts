@@ -215,11 +215,6 @@ export const projects: Project[] = [
       'Automated checks catch stitch problems before a file goes anywhere near fabric.',
       'The animation at the top of this site is one of those files, drawn stitch by stitch in the order the machine would sew it.',
     ],
-    images: [
-      { src: 'media/kadha-adam.jpg', alt: 'Kadha Creation of Adam patch design' },
-      { src: 'media/kadha-wolf.jpg', alt: 'Kadha wolf patch design' },
-      { src: 'media/kadha-jatayu.jpg', alt: 'Kadha Jatayu patch design' },
-    ],
     links: [{ label: 'Code on GitHub', href: 'https://github.com/allwinandrews/kadha' }],
     exhibit: 'stitch',
     tier: 'exhibit',
