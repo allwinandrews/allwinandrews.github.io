@@ -3,6 +3,7 @@ import { asset, hasWebGL, useInView, useJson } from '../lib/hooks'
 import { designById, designs } from '../data/designs'
 import type { MonteCarloData } from '../scenes/MonteCarloScene'
 
+const StitchScene = lazy(() => import('../scenes/StitchScene'))
 const PoseScene = lazy(() => import('../scenes/PoseScene'))
 const MonteCarloScene = lazy(() => import('../scenes/MonteCarloScene'))
 
@@ -25,11 +26,24 @@ function Stage({
 }
 
 export function StitchExhibit({ design = 'adam' }: { design?: string }) {
+  const hud = useRef<HTMLDivElement>(null)
+  const [runId, setRunId] = useState(0)
   return (
     <figure className="exhibit exhibit-stitch">
-      <div className="stage stage-stitch">
-        <img src={asset(`media/kadha/${design}.jpg`)} alt="Kadha embroidery design, front view" />
-      </div>
+      <Stage
+        className="stage-stitch"
+        fallback={<img src={asset(`media/kadha/${design}.jpg`)} alt="Kadha embroidery design, front view" />}
+      >
+        {(active) => <StitchScene active={active} hud={hud} runId={runId} design={design} />}
+      </Stage>
+      <figcaption>
+        <div className="hud" ref={hud}>
+          loading stitch file
+        </div>
+        <button className="link-btn" onClick={() => setRunId((n) => n + 1)}>
+          Sew it again
+        </button>
+      </figcaption>
     </figure>
   )
 }

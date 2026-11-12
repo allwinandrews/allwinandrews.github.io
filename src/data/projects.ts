@@ -213,7 +213,7 @@ export const projects: Project[] = [
     points: [
       'Turns finished artwork into stitch-ready PES and DST files for an embroidery machine.',
       'Automated checks catch stitch problems before a file goes anywhere near fabric.',
-      'The design at the top of this site is one of those files, shown as the finished embroidery.',
+      'The design at the top of this site is one of those files, drawn stitch by stitch, front on, in the order the machine would sew it.',
     ],
     links: [{ label: 'Code on GitHub', href: 'https://github.com/allwinandrews/kadha' }],
     exhibit: 'stitch',

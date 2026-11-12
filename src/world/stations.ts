@@ -43,7 +43,7 @@ export const sizes: Record<PropKind, { collide: number; reach: number; labelY: n
 export const reachOf = (s: Station) => Math.max(sizes[s.prop].reach, Math.abs(s.x) - 0.2)
 
 export const stations: Station[] = [
-  { id: 'kadha', kind: 'project', slug: 'kadha', title: 'Kadha', hint: 'an embroidery hoop', prop: 'hoop', x: -6.5, z: -1.5 },
+  { id: 'kadha', kind: 'project', slug: 'kadha', title: 'Kadha', hint: 'an embroidery hoop, sewing itself', prop: 'hoop', x: -6.5, z: -1.5 },
   { id: 'aibb', kind: 'project', slug: 'aibb', title: 'AI Basket Builder', hint: 'a market stall', prop: 'basket', x: 5.5, z: -8 },
   { id: 'auron', kind: 'project', slug: 'auron', title: 'Auron', hint: 'a microphone, listening', prop: 'rings', x: -5.5, z: -13.5 },
   { id: 'alynd', kind: 'project', slug: 'alynd', title: 'Alynd', hint: 'three floating screens', prop: 'screens', x: 6, z: -19 },

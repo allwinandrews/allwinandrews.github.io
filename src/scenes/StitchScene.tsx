@@ -65,7 +65,7 @@ function Stitches({
   const needle = useRef<THREE.Mesh>(null)
   const state = useRef({ p: 0, run: -1, lastHud: -1 })
 
-  useFrame(({ pointer, clock }, delta) => {
+  useFrame((_, delta) => {
     const st = state.current
     if (st.run !== runId) {
       st.run = runId
@@ -86,13 +86,6 @@ function Stitches({
       hud.current.textContent = finished
         ? `${data.count.toLocaleString()} stitches · ${data.colors.length} threads · done`
         : `stitch ${(si + 1).toLocaleString()} / ${data.count.toLocaleString()} · thread ${built.thread[si] + 1} of ${data.colors.length}`
-    }
-    if (group.current) {
-      const t = clock.elapsedTime
-      const ty = pointer.x * 0.6 + Math.sin(t * 0.4) * 0.3
-      const tx = -pointer.y * 0.3 + Math.cos(t * 0.3) * 0.08
-      group.current.rotation.y += (ty - group.current.rotation.y) * 0.06
-      group.current.rotation.x += (tx - group.current.rotation.x) * 0.06
     }
   })
 
@@ -128,7 +121,7 @@ export default function StitchScene({
     <Canvas
       dpr={[1, 1.75]}
       frameloop={active ? 'always' : 'never'}
-      camera={{ position: [0, 0, 7.4], fov: 38 }}
+      camera={{ position: [0, 0, 7.4], fov: 38 }} /* fixed, straight-on front view */
       gl={{ antialias: true, alpha: true }}
     >
       {data && <Stitches key={design} data={data} hud={hud} runId={runId} />}
