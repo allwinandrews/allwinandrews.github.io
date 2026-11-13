@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef, useState, type ReactNode } from 'react'
+import { createContext, lazy, Suspense, useContext, useRef, useState, type ReactNode } from 'react'
 import { asset, hasWebGL, useInView, useJson } from '../lib/hooks'
 import { designById, designs } from '../data/designs'
 import type { MonteCarloData } from '../scenes/MonteCarloScene'
@@ -6,6 +6,12 @@ import type { MonteCarloData } from '../scenes/MonteCarloScene'
 const StitchScene = lazy(() => import('../scenes/StitchScene'))
 const PoseScene = lazy(() => import('../scenes/PoseScene'))
 const MonteCarloScene = lazy(() => import('../scenes/MonteCarloScene'))
+
+/**
+ * Inside the book a page decides when its demos run, so they skip the scroll observer
+ * (observers are unreliable inside 3D-transformed pages on some mobile browsers).
+ */
+export const EagerStages = createContext(false)
 
 /** Mounts a 3D scene only once it scrolls near the viewport, and pauses it when it leaves. */
 function Stage({
@@ -17,10 +23,11 @@ function Stage({
   fallback: ReactNode
   children: (active: boolean) => ReactNode
 }) {
+  const eager = useContext(EagerStages)
   const { ref, inView, seen } = useInView<HTMLDivElement>()
   return (
     <div ref={ref} className={`stage ${className}`}>
-      {!hasWebGL() ? fallback : seen && <Suspense fallback={null}>{children(inView)}</Suspense>}
+      {!hasWebGL() ? fallback : (eager || seen) && <Suspense fallback={null}>{children(eager || inView)}</Suspense>}
     </div>
   )
 }

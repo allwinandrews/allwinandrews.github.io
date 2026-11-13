@@ -471,3 +471,79 @@
     }
   }
 }
+
+/* ---------- phones: a simpler, sturdier page turn ----------
+   One flat page that swings open on its spine and fades out at the edge-on point.
+   No back faces, no preserve-3d and no backface-visibility, which is where mobile
+   Safari and low-end Android GPUs are least reliable. */
+.book.single {
+  perspective: none;
+}
+.book.single .leaf {
+  transform-style: flat;
+  transform: perspective(1800px) rotateY(0deg);
+  transition:
+    transform var(--flip) cubic-bezier(0.5, 0.05, 0.2, 1),
+    opacity 0s,
+    visibility 0s,
+    z-index 0s calc(var(--flip) / 2);
+}
+.book.single .leaf.flipped {
+  transform: perspective(1800px) rotateY(-90deg);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    transform var(--flip) cubic-bezier(0.5, 0.05, 0.2, 1),
+    opacity calc(var(--flip) * 0.2) linear calc(var(--flip) * 0.8),
+    visibility 0s linear var(--flip),
+    z-index 0s calc(var(--flip) / 2);
+}
+.book.single.jump .leaf,
+.book.single.jump .leaf.flipped {
+  transition: none;
+}
+.face.fade-in {
+  animation: page-fade 0.35s ease-out;
+}
+@keyframes page-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* touch: no double-tap zoom on the controls, no grey tap flash */
+.book-view,
+.book-controls,
+.book-controls button,
+.viewswitch a,
+.toc button,
+.shot-thumbs button,
+.pick {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* inside a page the pose demo stacks: keep the phone clip a sensible size */
+.face .exhibit-pose .phone {
+  width: auto;
+  max-width: 100%;
+  max-height: 44vh;
+  margin: 0 auto;
+}
+.face .exhibit-pose .stage-pose {
+  min-height: 200px;
+}
+/* a soft fade at the foot of a page shows there is more to scroll */
+.paper {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 44px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 44px), transparent);
+}
+.face.cover .paper,
+.face.back-cover .paper {
+  -webkit-mask-image: none;
+  mask-image: none;
+}

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Boundary, Legend } from '../components/Boundary'
-import { KadhaGallery, MonteCarloExhibit, PoseExhibit } from '../components/Exhibits'
+import { EagerStages, KadhaGallery, MonteCarloExhibit, PoseExhibit } from '../components/Exhibits'
 import { ViewSwitch } from '../components/Layout'
 import { education, experience, moreWork, profile, projects, stackGroups, type Project } from '../data/projects'
 import { asset } from '../lib/hooks'
@@ -428,6 +428,10 @@ export default function Book() {
   const from = prevPos.current
   const dist = Math.abs(pos - from)
   const step = dist > 1 ? Math.min(110, 700 / dist) : 0
+  // On phones a jump of several pages cross-fades instead of flipping a long stack
+  const jump = !spread && dist > 1
+  const fadeIdx = useRef(-1)
+  if (!spread && dist > 0) fadeIdx.current = jump ? curIdx : -1
 
   const shift = spread && pos === 0 ? 'shift-l' : spread && pos === leaves ? 'shift-r' : ''
   const current = pages[curIdx]
@@ -441,7 +445,7 @@ export default function Book() {
     const isRight = side === 'front'
     return (
       <div
-        className={`face ${side} ${pg.kind === 'back' ? 'back-cover' : pg.kind}`}
+        className={`face ${side} ${pg.kind === 'back' ? 'back-cover' : pg.kind} ${i === fadeIdx.current ? 'fade-in' : ''}`}
         inert={!vis}
         aria-hidden={!vis}
         style={{ ['--shade-d' as string]: `${d[0]}ms`, ['--shade-d2' as string]: `${d[1]}ms` }}
@@ -449,7 +453,7 @@ export default function Book() {
         data-flipped={flipped}
       >
         <div className="paper" tabIndex={vis && pg.kind === 'paper' ? 0 : undefined} aria-label={vis ? pg.title : undefined}>
-          {body}
+          <EagerStages.Provider value={true}>{body}</EagerStages.Provider>
         </div>
         {pg.kind === 'paper' && i > 0 && <span className={`folio ${isRight ? 'folio-r' : 'folio-l'}`}>{i}</span>}
       </div>
@@ -465,13 +469,16 @@ export default function Book() {
         <ViewSwitch />
       </header>
 
-      <div className="book-stage" onPointerDown={onPointerDown} onPointerUp={onPointerUp} onWheel={onWheel}>
+      <div className="book-stage" onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => (swipe.current = null)} onWheel={onWheel}>
         <section
-          className={`book ${spread ? 'spread' : 'single'} ${shift}`}
+          className={`book ${spread ? 'spread' : 'single'} ${shift} ${jump ? 'jump' : ''}`}
           aria-roledescription="book"
           aria-label="Portfolio book"
         >
-          {Array.from({ length: leaves }, (_, j) => {
+          {Array.from({ length: leaves }, (_, j) => j)
+            // phones: only the pages around the reader exist in the DOM, which keeps memory and layers low
+            .filter((j) => spread || Math.abs(j - pos) <= 1 || Math.abs(j - recent) <= 1)
+            .map((j) => {
             const flipped = j < pos
             const changed = dist > 0 && flipped !== j < from
             const forward = pos > from
@@ -488,14 +495,14 @@ export default function Book() {
                 className={`leaf ${flipped ? 'flipped' : ''}`}
                 style={{
                   zIndex: z,
-                  transitionDelay: `${delay}ms, ${delay + FLIP_MS / 2}ms`,
+                  ...(spread ? { transitionDelay: `${delay}ms, ${delay + FLIP_MS / 2}ms` } : null),
                 }}
               >
                 {face(spread ? 2 * j : j, 'front', j, flipped, turningTo ? [d1, d2] : [d2, d1])}
                 {spread && face(2 * j + 1, 'back', j, flipped, turningTo ? [d2, d1] : [d1, d2])}
               </div>
             )
-          })}
+            })}
         </section>
       </div>
 
