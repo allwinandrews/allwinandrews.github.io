@@ -315,7 +315,7 @@ function buildPages(spread: boolean): Page[] {
             </a>
           </div>
           <p className="fine book-alt">
-            Prefer another format? <Link to="/world">Walk through it as a 3D game</Link> or{' '}
+            Prefer another format? <Link to="/world">Drive through it as a 3D game</Link> or{' '}
             <Link to="/work">read the plain version</Link>. Contract work: <Link to="/services">AJA IT Services</Link>.
           </p>
         </>

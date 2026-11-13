@@ -1,12 +1,17 @@
-import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { isInteractive } from '../lib/hooks'
-import { game } from './game'
+import { game, MAX_SPEED } from './game'
 import { Prop } from './props'
 import { bounds, pathCurve, reachOf, sizes, spools, stations, type Station } from './stations'
 
-const SPEED = 6.2
+const REVERSE_MAX = 5
+const ACCEL = 10
+const BRAKE = 20
+const DRAG = 3
+const TURN = 1.9
+const CAR_R = 0.9
 const tmp = new THREE.Vector3()
 
 /* ---------- text labels (canvas sprites, so no font files to ship) ---------- */
@@ -87,37 +92,12 @@ function Ground() {
     t.colorSpace = THREE.SRGBColorSpace
     return t
   }, [])
-  const marker = useRef<THREE.Mesh>(null)
-
-  useFrame(({ clock }) => {
-    const m = marker.current
-    if (!m) return
-    m.visible = !!game.target
-    if (game.target) {
-      m.position.set(game.target.x, 0.03, game.target.z)
-      const s = 1 + Math.sin(clock.elapsedTime * 6) * 0.12
-      m.scale.set(s, s, s)
-    }
-  })
-
-  // click or tap to walk there; keep the finger or button down and drag to steer
-  const walkTo = (e: ThreeEvent<PointerEvent>) => {
-    if (e.type === 'pointermove' && e.buttons === 0) return
-    e.stopPropagation()
-    game.target = new THREE.Vector3(e.point.x, 0, e.point.z)
-  }
 
   return (
-    <>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -33]} onPointerDown={walkTo} onPointerMove={walkTo}>
-        <planeGeometry args={[70, 120]} />
-        <meshStandardMaterial map={tex} roughness={1} />
-      </mesh>
-      <mesh ref={marker} rotation={[-Math.PI / 2, 0, 0]} visible={false}>
-        <ringGeometry args={[0.28, 0.36, 32]} />
-        <meshBasicMaterial color="#f7b157" transparent opacity={0.9} />
-      </mesh>
-    </>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -33]}>
+      <planeGeometry args={[70, 120]} />
+      <meshStandardMaterial map={tex} roughness={1} />
+    </mesh>
   )
 }
 
@@ -230,78 +210,95 @@ function Spools({ collected }: { collected: Set<number> }) {
   )
 }
 
-/* ---------- player ---------- */
+/* ---------- the car ---------- */
 
-function Player() {
+const WHEELS: [number, number, boolean][] = [
+  [-0.95, 1.15, true],
+  [0.95, 1.15, true],
+  [-0.95, -1.1, false],
+  [0.95, -1.1, false],
+]
+
+function Car() {
   const root = useRef<THREE.Group>(null)
-  const legL = useRef<THREE.Group>(null)
-  const legR = useRef<THREE.Group>(null)
-  const armL = useRef<THREE.Group>(null)
-  const armR = useRef<THREE.Group>(null)
-  const phase = useRef(0)
+  const body = useRef<THREE.Group>(null)
+  const steerers = useRef<(THREE.Group | null)[]>([])
+  const spinners = useRef<(THREE.Group | null)[]>([])
+  const tail = useRef<THREE.MeshStandardMaterial>(null)
+  const roll = useRef(0)
+  const lastSpeed = useRef(0)
 
-  useFrame((_, dt) => {
+  useFrame((_, rawDt) => {
+    const dt = Math.min(rawDt, 0.05)
     const g = root.current
     if (!g) return
-    g.position.x = game.pos.x
-    g.position.z = game.pos.z
-    // turn the short way round towards the heading
-    let d = game.heading - g.rotation.y
-    d = Math.atan2(Math.sin(d), Math.cos(d))
-    g.rotation.y += d * Math.min(1, dt * 12)
+    g.position.set(game.pos.x, 0, game.pos.z)
+    g.rotation.y = game.heading
 
-    phase.current += dt * (game.moving ? 11 : 0)
-    const swing = game.moving ? Math.sin(phase.current) * 0.75 : 0
-    const ease = Math.min(1, dt * 14)
-    for (const [ref, sign] of [
-      [legL, 1],
-      [legR, -1],
-      [armL, -1],
-      [armR, 1],
-    ] as const) {
-      const r = ref.current
-      if (r) r.rotation.x += (swing * sign - r.rotation.x) * ease
+    roll.current += (game.speed * dt) / 0.38
+    steerers.current.forEach((s) => s && (s.rotation.y = game.steer * 0.45))
+    spinners.current.forEach((s) => s && (s.rotation.x = roll.current))
+
+    // the body leans into corners and dips when braking
+    const b = body.current
+    if (b) {
+      const accel = (game.speed - lastSpeed.current) / Math.max(dt, 0.001)
+      b.rotation.z += (-game.steer * (Math.abs(game.speed) / MAX_SPEED) * 0.07 - b.rotation.z) * Math.min(1, dt * 8)
+      b.rotation.x += (THREE.MathUtils.clamp(-accel * 0.004, -0.05, 0.05) - b.rotation.x) * Math.min(1, dt * 8)
     }
-    g.position.y = game.moving ? Math.abs(Math.sin(phase.current)) * 0.07 : 0
+    lastSpeed.current = game.speed
+    if (tail.current) tail.current.emissiveIntensity = game.braking ? 3.2 : 0.8
   })
 
-  const skin = '#f3ede4'
   return (
     <group ref={root}>
-      <mesh position={[0, 1.02, 0]}>
-        <capsuleGeometry args={[0.27, 0.42, 6, 14]} />
-        <meshStandardMaterial color={skin} roughness={0.6} />
-      </mesh>
-      <mesh position={[0, 1.72, 0]}>
-        <sphereGeometry args={[0.25, 20, 16]} />
-        <meshStandardMaterial color={skin} roughness={0.6} />
-      </mesh>
-      {/* scarf, so it is clear which way the figure is facing */}
-      <mesh position={[0, 1.44, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.2, 0.07, 8, 20]} />
-        <meshStandardMaterial color="#f7b157" emissive="#f7b157" emissiveIntensity={0.4} />
-      </mesh>
-      <mesh position={[0.09, 1.76, 0.22]}>
-        <sphereGeometry args={[0.035, 8, 8]} />
-        <meshBasicMaterial color="#15120f" />
-      </mesh>
-      <mesh position={[-0.09, 1.76, 0.22]}>
-        <sphereGeometry args={[0.035, 8, 8]} />
-        <meshBasicMaterial color="#15120f" />
-      </mesh>
-      {(
-        [
-          [legL, 0.13, 0.68, 0.62, 0.1],
-          [legR, -0.13, 0.68, 0.62, 0.1],
-          [armL, 0.36, 1.3, 0.5, 0.075],
-          [armR, -0.36, 1.3, 0.5, 0.075],
-        ] as const
-      ).map(([ref, x, y, len, r], i) => (
-        <group key={i} ref={ref} position={[x, y, 0]}>
-          <mesh position={[0, -len / 2, 0]}>
-            <capsuleGeometry args={[r, len - r * 2, 4, 8]} />
-            <meshStandardMaterial color={i < 2 ? '#3a332c' : skin} roughness={0.7} />
+      <pointLight position={[0, 1.1, 4.2]} intensity={14} distance={13} decay={2} color="#fff1dc" />
+      <group ref={body}>
+        <mesh position={[0, 0.62, 0]}>
+          <boxGeometry args={[1.75, 0.55, 3.5]} />
+          <meshStandardMaterial color="#f7b157" roughness={0.35} metalness={0.3} />
+        </mesh>
+        <mesh position={[0, 1.12, -0.25]}>
+          <boxGeometry args={[1.45, 0.5, 1.75]} />
+          <meshStandardMaterial color="#1b2430" roughness={0.15} metalness={0.5} />
+        </mesh>
+        {[-0.62, 0.62].map((x) => (
+          <mesh key={x} position={[x, 0.7, 1.76]}>
+            <boxGeometry args={[0.38, 0.16, 0.06]} />
+            <meshStandardMaterial color="#fff8e8" emissive="#fff8e8" emissiveIntensity={2.5} />
           </mesh>
+        ))}
+        {[-0.62, 0.62].map((x) => (
+          <mesh key={x} position={[x, 0.72, -1.76]}>
+            <boxGeometry args={[0.4, 0.14, 0.06]} />
+            <meshStandardMaterial ref={x < 0 ? tail : undefined} color="#e2574c" emissive="#e2574c" emissiveIntensity={0.8} />
+          </mesh>
+        ))}
+        {/* a stripe of white thread down the roof, like a seam */}
+        <mesh position={[0, 1.375, -0.25]}>
+          <boxGeometry args={[0.16, 0.02, 1.7]} />
+          <meshStandardMaterial color="#f3ede4" />
+        </mesh>
+      </group>
+      {WHEELS.map(([x, z, front], i) => (
+        <group key={i} position={[x, 0.38, z]}>
+          <group ref={(el) => void (front && (steerers.current[i] = el))}>
+            <group ref={(el) => void (spinners.current[i] = el)}>
+              <mesh rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[0.38, 0.38, 0.3, 20]} />
+                <meshStandardMaterial color="#14110e" roughness={0.9} />
+              </mesh>
+              <mesh rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[0.2, 0.2, 0.32, 12]} />
+                <meshStandardMaterial color="#8d8780" metalness={0.8} roughness={0.3} />
+              </mesh>
+              {/* one spoke, so the spin is visible */}
+              <mesh position={[Math.sign(x) * 0.17, 0.14, 0]}>
+                <boxGeometry args={[0.03, 0.2, 0.06]} />
+                <meshStandardMaterial color="#f3ede4" />
+              </mesh>
+            </group>
+          </group>
         </group>
       ))}
     </group>
@@ -325,6 +322,7 @@ function Controller({
   const near = useRef<string | null>(null)
   const { camera, size } = useThree()
   const first = useRef(true)
+  const camH = useRef(game.heading)
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -349,32 +347,28 @@ function Controller({
     const dt = Math.min(rawDt, 0.05)
     const k = keys.current
     const p = game.pos
-    let dx = 0
-    let dz = 0
-    if (!paused) {
-      if (k.has('w') || k.has('arrowup')) dz -= 1
-      if (k.has('s') || k.has('arrowdown')) dz += 1
-      if (k.has('a') || k.has('arrowleft')) dx -= 1
-      if (k.has('d') || k.has('arrowright')) dx += 1
-      if (dx || dz) game.target = null
-      else if (game.target) {
-        tmp.subVectors(game.target, p)
-        if (tmp.length() < 0.18) game.target = null
-        else {
-          dx = tmp.x
-          dz = tmp.z
-        }
-      }
-    }
-    const len = Math.hypot(dx, dz)
-    game.moving = len > 0
-    if (len > 0) {
-      dx /= len
-      dz /= len
-      game.heading = Math.atan2(dx, dz)
-      p.x += dx * SPEED * dt
-      p.z += dz * SPEED * dt
-    }
+    const inp = game.input
+    const gas = !paused && (k.has('w') || k.has('arrowup') || inp.gas)
+    const brake = !paused && (k.has('s') || k.has('arrowdown') || inp.brake)
+    const left = k.has('a') || k.has('arrowleft') || inp.left
+    const right = k.has('d') || k.has('arrowright') || inp.right
+    const steerIn = paused ? 0 : (left ? 1 : 0) - (right ? 1 : 0)
+
+    // throttle, brake, reverse, and rolling resistance
+    let v = game.speed
+    if (gas) v += ACCEL * dt * (v < 0 ? 2.2 : 1 - 0.6 * (v / MAX_SPEED))
+    else if (brake) v -= (v > 0 ? BRAKE : ACCEL * 0.7) * dt
+    else v -= Math.sign(v) * Math.min(Math.abs(v), (paused ? BRAKE : DRAG) * dt)
+    game.braking = (brake || paused) && v > 0.5
+    v = THREE.MathUtils.clamp(v, -REVERSE_MAX, MAX_SPEED)
+
+    // a car only turns while it moves, and a little less sharply when fast
+    game.steer += (steerIn - game.steer) * Math.min(1, dt * 7)
+    const grip = Math.min(1, Math.abs(v) / 3.5) * (1 - 0.35 * (Math.abs(v) / MAX_SPEED))
+    game.heading += game.steer * TURN * grip * Math.sign(v) * dt
+    p.x += Math.sin(game.heading) * v * dt
+    p.z += Math.cos(game.heading) * v * dt
+    game.speed = v
 
     // landmarks are solid: push the player back out of them
     let best: Station | null = null
@@ -384,18 +378,22 @@ function Controller({
       const ox = p.x - s.x
       const oz = p.z - s.z
       const d = Math.hypot(ox, oz)
-      if (d < sz.collide && d > 0.0001) {
-        p.x = s.x + (ox / d) * sz.collide
-        p.z = s.z + (oz / d) * sz.collide
-        game.target = null
+      const hit = sz.collide + CAR_R
+      if (d < hit && d > 0.0001) {
+        p.x = s.x + (ox / d) * hit
+        p.z = s.z + (oz / d) * hit
+        game.speed *= -0.25 // bump and bounce back
       }
       if (d < reachOf(s) && d < bestD) {
         best = s
         bestD = d
       }
     }
-    p.x = THREE.MathUtils.clamp(p.x, bounds.minX, bounds.maxX)
-    p.z = THREE.MathUtils.clamp(p.z, bounds.minZ, bounds.maxZ)
+    const cx = THREE.MathUtils.clamp(p.x, bounds.minX, bounds.maxX)
+    const cz = THREE.MathUtils.clamp(p.z, bounds.minZ, bounds.maxZ)
+    if (cx !== p.x || cz !== p.z) game.speed *= 0.6 // scrape along the edge of the cloth
+    p.x = cx
+    p.z = cz
 
     const id = best ? best.id : null
     if (id !== near.current) {
@@ -405,19 +403,25 @@ function Controller({
 
     if (!paused)
       spools.forEach((s, i) => {
-        if (!collected.has(i) && Math.hypot(p.x - s.x, p.z - s.z) < 0.9) onCollect(i)
+        if (!collected.has(i) && Math.hypot(p.x - s.x, p.z - s.z) < 1.7) onCollect(i)
       })
 
-    // follow camera: higher and further back on tall, narrow screens
+    // chase camera: sits behind the car and swings round smoothly as it turns
     const portrait = size.width / size.height < 0.9
-    const back = portrait ? 15 : 10.5
-    const up = portrait ? 13 : 8.5
-    tmp.set(p.x * 0.85, up, p.z + back)
+    const back = (portrait ? 13 : 10) + Math.max(0, game.speed) * 0.25
+    const up = portrait ? 10.5 : 5.8
+    let dh = game.heading - camH.current
+    dh = Math.atan2(Math.sin(dh), Math.cos(dh))
+    camH.current += dh * (first.current ? 1 : 1 - Math.exp(-3.2 * dt))
+    const fx = Math.sin(camH.current)
+    const fz = Math.cos(camH.current)
+    tmp.set(p.x - fx * back, up, p.z - fz * back)
     if (first.current) {
       camera.position.copy(tmp)
       first.current = false
-    } else camera.position.lerp(tmp, 1 - Math.exp(-4 * dt))
-    camera.lookAt(camera.position.x, 1.2, camera.position.z - back - 2.5)
+    } else camera.position.lerp(tmp, 1 - Math.exp(-7 * dt))
+    const ahead = portrait ? 5 : 7
+    camera.lookAt(p.x + fx * ahead, 0.4, p.z + fz * ahead)
   })
   return null
 }
@@ -466,7 +470,7 @@ export default function Scene({
         <Landmark key={s.id} s={s} found={found.has(s.id)} />
       ))}
       <Label text="Follow the stitches" position={[0, 0.9, 3.2]} height={0.42} color="#a39a90" />
-      <Player />
+      <Car />
       <Controller paused={paused} collected={collected} onNear={onNear} onCollect={onCollect} />
     </>
   )

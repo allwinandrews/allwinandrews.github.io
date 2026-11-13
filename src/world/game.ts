@@ -7,10 +7,20 @@ import { spawn } from './stations'
  */
 export const game = {
   pos: new THREE.Vector3(spawn.x, 0, spawn.z),
-  target: null as THREE.Vector3 | null,
+  /** Direction the car faces: forward is (sin heading, cos heading). Starts pointing down the road. */
   heading: Math.PI,
-  moving: false,
+  /** Signed speed in world units per second; negative is reversing. */
+  speed: 0,
+  /** Smoothed steering, -1 (right) to 1 (left), for the front wheels. */
+  steer: 0,
+  braking: false,
+  /** Touch controls write here; the keyboard is read directly by the controller. */
+  input: { left: false, right: false, gas: false, brake: false },
 }
+
+export const MAX_SPEED = 13
+/** What the speedometer shows: world units are roughly metres, so this reads as a plausible km/h. */
+export const toKmh = (v: number) => Math.round(Math.abs(v) * 8)
 
 const KEY = 'world-v1'
 

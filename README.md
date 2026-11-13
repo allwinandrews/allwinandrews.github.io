@@ -22,7 +22,7 @@ Three ways to read it, switchable from every header (`ViewSwitch` in `src/compon
   contents page all turn pages, and a multi-page jump turns the leaves in a quick cascade. The current page is in
   `?p=<id>`, so Back from a case study returns to the same page. 3D demos and video only run on the visible page.
   `prefers-reduced-motion` turns the flip into an instant swap.
-- `/world` is the walkable 3D game (`src/pages/World.tsx`, `src/world/`). Visitors walk a stitched path and open each
+- `/world` is the drivable 3D game (`src/pages/World.tsx`, `src/world/`). Visitors drive a car down a stitched road and open each
   project as a landmark. Landmark positions and collectibles are in `src/world/stations.ts`. It falls back to the
   book when WebGL is missing or the 3D context is lost.
 - `/work` is the plain view: a table by default, with a toggle for cards and 3D demos.

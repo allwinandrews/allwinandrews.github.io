@@ -5,7 +5,7 @@ import { Boundary } from '../components/Boundary'
 import { ViewSwitch } from '../components/Layout'
 import { bySlug, experience, profile } from '../data/projects'
 import { hasWebGL, isInteractive } from '../lib/hooks'
-import { game, kadhaDesign, loadSave, writeSave } from '../world/game'
+import { game, kadhaDesign, loadSave, toKmh, writeSave } from '../world/game'
 import { DesignPicker } from '../components/Exhibits'
 import Scene from '../world/Scene'
 import { spools, stations, type Station } from '../world/stations'
@@ -22,6 +22,77 @@ class Safe extends Component<{ children: ReactNode; onFail: () => void }, { fail
   render() {
     return this.state.failed ? null : this.props.children
   }
+}
+
+/** Speedometer. Reads the car's speed straight from the game state, outside React, so it costs no re-renders. */
+function Speedo() {
+  const el = useRef<HTMLSpanElement>(null)
+  useEffect(() => {
+    let raf = 0
+    let last = -1
+    const tick = () => {
+      const v = toKmh(game.speed)
+      if (v !== last && el.current) {
+        el.current.textContent = String(v)
+        last = v
+      }
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [])
+  return (
+    <div className="speedo" aria-hidden="true">
+      <span ref={el}>0</span>
+      <small>km/h</small>
+    </div>
+  )
+}
+
+type Pedal = 'left' | 'right' | 'gas' | 'brake'
+
+/** On-screen controls for touch: steer on the left thumb, pedals on the right. Each button tracks its own finger. */
+function Pedals() {
+  useEffect(
+    () => () => {
+      game.input.left = game.input.right = game.input.gas = game.input.brake = false
+    },
+    [],
+  )
+  const btn = (k: Pedal, label: string, text: string) => (
+    <button
+      type="button"
+      className={`pedal pedal-${k}`}
+      aria-label={label}
+      onPointerDown={(e) => {
+        e.preventDefault()
+        try {
+          e.currentTarget.setPointerCapture(e.pointerId)
+        } catch {
+          /* synthetic or already-ended pointer: the button still works without capture */
+        }
+        game.input[k] = true
+      }}
+      onPointerUp={() => (game.input[k] = false)}
+      onPointerCancel={() => (game.input[k] = false)}
+      onLostPointerCapture={() => (game.input[k] = false)}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      {text}
+    </button>
+  )
+  return (
+    <div className="pedals">
+      <div className="pedals-steer">
+        {btn('left', 'Steer left', '◀')}
+        {btn('right', 'Steer right', '▶')}
+      </div>
+      <div className="pedals-drive">
+        {btn('brake', 'Brake and reverse', 'Brake')}
+        {btn('gas', 'Accelerate', 'Go')}
+      </div>
+    </div>
+  )
 }
 
 function KadhaPicker() {
@@ -110,7 +181,8 @@ export default function World() {
   // restore where the visitor was standing (e.g. after reading a case study)
   useState(() => {
     game.pos.set(save.x, 0, save.z)
-    game.target = null
+    game.speed = 0
+    game.steer = 0
   })
 
   const say = useCallback((msg: string) => {
@@ -122,7 +194,6 @@ export default function World() {
   const open = useCallback(
     (id: string) => {
       setOpenId(id)
-      game.target = null
       setFound((f) => {
         if (f.has(id)) return f
         const n = new Set(f).add(id)
@@ -191,7 +262,7 @@ export default function World() {
   const touch = typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches
 
   return (
-    <div className="world">
+    <div className={touch ? 'world touch' : 'world'}>
       <Safe onFail={() => setFailed(true)}>
         <Canvas
           dpr={[1, 1.5]}
@@ -242,13 +313,15 @@ export default function World() {
             <h1>{profile.name}</h1>
             <p className="lead">{profile.summary}</p>
             <p className="world-how">
-              This portfolio is a small world. Walk along the stitched path and see what you find.
+              This portfolio is a small world, and you drive a car through it. Follow the stitched road and see what you find.
               <br />
-              {touch ? 'Tap or drag on the ground to walk.' : 'Walk with WASD or the arrow keys, or click the ground.'}
+              {touch
+                ? 'Steer with the arrows on the left. Hold Go to drive, Brake to stop and reverse.'
+                : 'Drive with W A S D or the arrow keys: W accelerates, S brakes and reverses.'}
             </p>
             <div className="cta">
               <button className="btn btn-primary" onClick={() => setStarted(true)} autoFocus>
-                Start exploring
+                Start the engine
               </button>
               <Link className="btn" to="/">
                 Read it as a book instead
@@ -261,7 +334,7 @@ export default function World() {
       {started && !openStation && nearStation && (
         <button
           className="world-prompt"
-          // open on press, not release: walking can move you out of range (and remove this button) mid-click
+          // open on press, not release: driving can move you out of range (and remove this button) mid-click
           onPointerDown={(e) => {
             e.preventDefault()
             open(nearStation.id)
@@ -276,8 +349,11 @@ export default function World() {
       )}
 
       {started && !openStation && !nearStation && found.size === 0 && (
-        <p className="world-help">{touch ? 'Tap or drag on the ground to walk' : 'WASD or arrow keys to walk'}</p>
+        <p className="world-help">{touch ? 'Hold Go to drive, steer with the arrows' : 'W accelerates, S brakes, A and D steer'}</p>
       )}
+
+      {started && !openStation && <Speedo />}
+      {started && !openStation && touch && <Pedals />}
 
       {toast && (
         <p className="world-toast" role="status">
@@ -288,7 +364,7 @@ export default function World() {
       {openStation && (
         <aside className="world-panel" role="dialog" aria-label={openStation.title}>
           <button ref={closeBtn} className="world-close" onClick={() => setOpenId(null)}>
-            Keep walking <kbd>Esc</kbd>
+            Keep driving <kbd>Esc</kbd>
           </button>
           <PanelBody s={openStation} />
         </aside>
