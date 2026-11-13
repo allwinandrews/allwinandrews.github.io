@@ -33,8 +33,13 @@ function useMedia(query: string) {
     const mq = matchMedia(query)
     const on = () => setMatch(mq.matches)
     on()
-    mq.addEventListener('change', on)
-    return () => mq.removeEventListener('change', on)
+    // older Safari only has addListener
+    if (mq.addEventListener) mq.addEventListener('change', on)
+    else mq.addListener(on)
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', on)
+      else mq.removeListener(on)
+    }
   }, [query])
   return match
 }
@@ -406,6 +411,16 @@ export default function Book() {
     if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) (dx < 0 ? next : prev)()
   }
 
+  // two-finger sideways swipe on a trackpad
+  const wheelLock = useRef(0)
+  const onWheel = (e: React.WheelEvent) => {
+    if (Math.abs(e.deltaX) < 40 || Math.abs(e.deltaX) < Math.abs(e.deltaY) * 1.5) return
+    const now = Date.now()
+    if (now - wheelLock.current < 800) return
+    wheelLock.current = now
+    ;(e.deltaX > 0 ? next : prev)()
+  }
+
   const visible = (i: number) => (spread ? i === 2 * pos - 1 || i === 2 * pos : i === pos)
   const mounted = (i: number) => Math.abs(i - curIdx) <= 4 || Math.abs(i - recent) <= 4
 
@@ -450,7 +465,7 @@ export default function Book() {
         <ViewSwitch />
       </header>
 
-      <div className="book-stage" onPointerDown={onPointerDown} onPointerUp={onPointerUp}>
+      <div className="book-stage" onPointerDown={onPointerDown} onPointerUp={onPointerUp} onWheel={onWheel}>
         <section
           className={`book ${spread ? 'spread' : 'single'} ${shift}`}
           aria-roledescription="book"
