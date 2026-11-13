@@ -1,5 +1,5 @@
-import { useEffect, type ReactNode } from 'react'
-import { Link, useLocation, useNavigationType } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, NavLink, useLocation, useNavigationType } from 'react-router-dom'
 import { profile } from '../data/projects'
 
 /**
@@ -26,19 +26,31 @@ export function ScrollToTop() {
   return null
 }
 
-export function Nav({ right }: { right?: ReactNode }) {
+/** The three ways to read the portfolio. The book is the default. */
+export function ViewSwitch() {
+  return (
+    <nav className="viewswitch" aria-label="Choose how to view this portfolio">
+      <NavLink to="/" end>
+        Book
+      </NavLink>
+      <NavLink to="/world">3D game</NavLink>
+      <NavLink to="/work">Plain</NavLink>
+    </nav>
+  )
+}
+
+export function Nav() {
   return (
     <header className="nav">
       <Link to="/" className="nav-name">
         Allwin James Andrews
       </Link>
       <nav className="nav-links">
-        <Link to="/">Explore</Link>
         <Link to="/work#work">Work</Link>
         <Link to="/work#experience">Experience</Link>
         <Link to="/work#contact">Contact</Link>
-        {right}
       </nav>
+      <ViewSwitch />
     </header>
   )
 }

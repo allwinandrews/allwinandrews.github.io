@@ -15,10 +15,17 @@ npm run build
 
 ## Layout
 
-- `/` is the walkable world (`src/pages/World.tsx`, `src/world/`). Visitors walk a stitched path and open each
-  project as a landmark. Landmark positions and collectibles are in `src/world/stations.ts`.
-- `/work` is the scroll version of the same content. The world falls back to it when WebGL is missing or the
-  3D context is lost, and links to it as "Plain site". `?view=plain` there switches to a table.
+Three ways to read it, switchable from every header (`ViewSwitch` in `src/components/Layout.tsx`):
+
+- `/` is the book and the default (`src/pages/Book.tsx`, `src/book.css`). A page-turn book built from the same content:
+  two-page spreads on wide screens, one page per turn on phones. Next/Previous, arrow keys, Home/End, swipe, and the
+  contents page all turn pages, and a multi-page jump turns the leaves in a quick cascade. The current page is in
+  `?p=<id>`, so Back from a case study returns to the same page. 3D demos and video only run on the visible page.
+  `prefers-reduced-motion` turns the flip into an instant swap.
+- `/world` is the walkable 3D game (`src/pages/World.tsx`, `src/world/`). Visitors walk a stitched path and open each
+  project as a landmark. Landmark positions and collectibles are in `src/world/stations.ts`. It falls back to the
+  book when WebGL is missing or the 3D context is lost.
+- `/work` is the plain view: a table by default, with a toggle for cards and 3D demos.
 - `/projects/<slug>` is one page per project, so each can be linked directly.
 - `/services` is the AJA IT Services freelance page. It is not in the main navigation on purpose.
 

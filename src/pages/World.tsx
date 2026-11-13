@@ -2,6 +2,7 @@ import { Canvas } from '@react-three/fiber'
 import { Component, useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { Boundary } from '../components/Boundary'
+import { ViewSwitch } from '../components/Layout'
 import { bySlug, experience, profile } from '../data/projects'
 import { hasWebGL, isInteractive } from '../lib/hooks'
 import { game, kadhaDesign, loadSave, writeSave } from '../world/game'
@@ -183,7 +184,7 @@ export default function World() {
     }
   }, [])
 
-  if (!hasWebGL() || failed) return <Navigate to="/work" replace />
+  if (!hasWebGL() || failed) return <Navigate to="/" replace />
 
   const nearStation = stations.find((s) => s.id === near)
   const openStation = stations.find((s) => s.id === openId)
@@ -230,9 +231,7 @@ export default function World() {
               {found.size}/{stations.length} found · {collected.size}/{spools.length} skills
             </span>
           )}
-          <Link className="btn world-skip" to="/work">
-            Plain site
-          </Link>
+          <ViewSwitch />
         </div>
       </header>
 
@@ -251,8 +250,8 @@ export default function World() {
               <button className="btn btn-primary" onClick={() => setStarted(true)} autoFocus>
                 Start exploring
               </button>
-              <Link className="btn" to="/work">
-                Just show me the work
+              <Link className="btn" to="/">
+                Read it as a book instead
               </Link>
             </div>
           </div>

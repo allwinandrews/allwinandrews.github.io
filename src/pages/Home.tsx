@@ -12,9 +12,9 @@ function useView(): [View, (v: View) => void] {
   const [view, setView] = useState<View>(() => {
     if (new URLSearchParams(location.search).get('view') === 'plain') return 'plain'
     try {
-      return localStorage.getItem('view') === 'plain' ? 'plain' : 'full'
+      return localStorage.getItem('view') === 'full' ? 'full' : 'plain'
     } catch {
-      return 'full'
+      return 'plain'
     }
   })
   useEffect(() => {
@@ -29,12 +29,12 @@ function useView(): [View, (v: View) => void] {
 
 function ViewToggle({ view, setView }: { view: View; setView: (v: View) => void }) {
   return (
-    <div className="toggle" role="group" aria-label="Page view">
-      <button aria-pressed={view === 'full'} onClick={() => setView('full')}>
-        3D
-      </button>
+    <div className="toggle" role="group" aria-label="Level of detail">
       <button aria-pressed={view === 'plain'} onClick={() => setView('plain')}>
-        Plain
+        Table
+      </button>
+      <button aria-pressed={view === 'full'} onClick={() => setView('full')}>
+        Cards and 3D demos
       </button>
     </div>
   )
@@ -147,7 +147,7 @@ export default function Home() {
 
   return (
     <>
-      <Nav right={<ViewToggle view={view} setView={setView} />} />
+      <Nav />
       <main>
         <section className={`hero ${view === 'plain' ? 'hero-plain' : ''}`}>
           <div className="hero-text">
@@ -165,6 +165,9 @@ export default function Home() {
               <a className="btn" href={profile.github}>
                 GitHub
               </a>
+            </div>
+            <div className="cta">
+              <ViewToggle view={view} setView={setView} />
             </div>
           </div>
           {view === 'full' && (

@@ -2,7 +2,9 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import './styles.css'
+import './book.css'
 import { lazy, Suspense } from 'react'
+import Book from './pages/Book'
 import Home from './pages/Home'
 import ProjectPage from './pages/ProjectPage'
 import Services from './pages/Services'
@@ -35,7 +37,7 @@ window.addEventListener('vite:preloadError', (e) => {
 const World = lazy(() => import('./pages/World').catch(() => {
   // chunk failed to load (offline or stale deploy): use the plain site rather than a stuck loader
   if (reloadOnce()) return new Promise<never>(() => {})
-  return { default: () => <Navigate to="/work" replace /> }
+  return { default: () => <Navigate to="/" replace /> }
 }))
 
 createRoot(document.getElementById('root')!).render(
@@ -43,8 +45,9 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <ScrollToTop />
       <Routes>
+        <Route path="/" element={<Book />} />
         <Route
-          path="/"
+          path="/world"
           element={
             <Suspense fallback={<div className="world-loading">Loading the world</div>}>
               <World />
